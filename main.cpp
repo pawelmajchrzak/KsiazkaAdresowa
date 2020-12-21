@@ -15,6 +15,187 @@ struct Kontakt
     string imie, nazwisko, numerTelefonu, email, adres;
 };
 
+struct Uzytkownik
+{
+    int id;
+    string nazwa, haslo;
+};
+
+int wczytajIloscUzytkownikowZPliku(vector <Uzytkownik> &uzytkownicy)
+{
+    Uzytkownik nowyUzytkownik;
+    string linia;
+    int nr_linii = 1;
+    int iloscUzytkownikow = 0;
+    fstream plik;
+    plik.open("Uzytkownicy.txt",ios::in);
+
+    if(plik.good()==false)
+    {
+        return 0;
+    }
+    else
+    {
+        while (getline(plik,linia))
+        {
+            if (linia=="")
+            {
+                iloscUzytkownikow--;
+                break;
+            }
+            int poczatekDanej=0;
+            string tymczasowaKieszen[3];
+            int nrZmiennej=0;
+            for (int i=0; i<linia.length(); i++)
+            {
+                if (linia[i] == '|')
+                {
+                    tymczasowaKieszen[nrZmiennej] = linia.substr(poczatekDanej,i-poczatekDanej);
+                    nrZmiennej++;
+                    poczatekDanej = i+1;
+                }
+            }
+            uzytkownicy.push_back (nowyUzytkownik);
+            uzytkownicy[iloscUzytkownikow].id = atoi(tymczasowaKieszen[0].c_str());
+            uzytkownicy[iloscUzytkownikow].nazwa = tymczasowaKieszen[1];
+            uzytkownicy[iloscUzytkownikow].haslo = tymczasowaKieszen[2];
+            iloscUzytkownikow++;
+        }
+        if (iloscUzytkownikow == -1)
+            iloscUzytkownikow++;
+    }
+    plik.close();
+    return iloscUzytkownikow;
+}
+
+void zapiszUzytkownikaDoPliku(string nazwa,string haslo,int iloscUzytkownikow)
+{
+    fstream plik;
+    plik.open("Uzytkownicy.txt",ios::out|ios::app);
+    plik<<iloscUzytkownikow+1<< "|";
+    plik<<nazwa<< "|";
+    plik<<haslo<< "|"<< endl;
+    plik.close();
+}
+
+int rejestracja (vector <Uzytkownik> &uzytkownicy,int iloscUzytkownikow)
+{
+    string nazwa, haslo;
+    cout << "Podaj nazwe uzytkownika: ";
+    cin >> nazwa;
+
+    int i=0;
+    while (i < iloscUzytkownikow)
+    {
+        if (uzytkownicy[i].nazwa == nazwa)
+        {
+            cout << "Taki uzytkownik istnieje. Wpisz inna nazwe uzytkownika: ";
+            cin >> nazwa;
+            i=0;
+        }
+        else
+        {
+            i++;
+        }
+    }
+    cout << "Podaj haslo: ";
+    cin >> haslo;
+    zapiszUzytkownikaDoPliku(nazwa, haslo, iloscUzytkownikow);
+    uzytkownicy[iloscUzytkownikow].nazwa = nazwa;
+    uzytkownicy[iloscUzytkownikow].haslo = haslo;
+    uzytkownicy[iloscUzytkownikow].id = iloscUzytkownikow+1;
+        cout << "Konto zalozone" << endl;
+    Sleep(1000);
+    return iloscUzytkownikow+1;
+
+}
+
+int logowanie(vector <Uzytkownik> &uzytkownicy, int iloscUzytkownikow)
+{
+    string nazwa, haslo;
+    cout << "Podaj nazwe uzytkownika: ";
+    cin >> nazwa;
+    int i=0;
+    while (i < iloscUzytkownikow)
+    {
+        if (uzytkownicy[i].nazwa == nazwa)
+        {
+            for (int proba = 0; proba < 3; proba++)
+            {
+                cout << "Podaj haslo. Pozostalo prob " << 3-proba << ": ";
+                cin >> haslo;
+                if (uzytkownicy[i].haslo == haslo)
+                {
+                    cout << "Zalogowales sie." << endl;
+                    Sleep(1000);
+                    return uzytkownicy[i].id;
+                }
+            }
+            cout << "Podales 3 razy bledne haslo. Poczekaj 3 sekundy przed kolejna proba"<<endl;
+            Sleep(3000);
+            return 0;
+        }
+        i++;
+    }
+    cout << "Nie ma uzytkownika z takim loginem" << endl;
+    Sleep(1500);
+    return 0;
+}
+
+void zmianaHasla (vector <Uzytkownik> &uzytkownicy, int iloscUzytkownikow, int idZalogowanegoUzytkownika)
+{
+    string haslo;
+    cout << "Podaj nowe haslo: ";
+    cin >> haslo;
+    for (int i=0; i<iloscUzytkownikow; i++)
+    {
+        if (uzytkownicy[i].id == idZalogowanegoUzytkownika)
+        {
+            uzytkownicy[i].haslo = haslo;
+            cout << "Haslo zostalo zmienione" << endl;
+            Sleep(1500);
+        }
+    }
+}
+
+void logowanieIRejestracja(vector <Uzytkownik> &uzytkownicy,int &idZalogowanegoUzytkownika,int &iloscUzytkownikow)
+{
+
+
+        char wybor;
+
+    while(1)
+    {
+        if (idZalogowanegoUzytkownika == 0)
+        {
+            system("cls");
+            cout << "1. Rejestracja" << endl;
+            cout << "2. Logowanie" << endl;
+            cout << "9. Zakoncz program" << endl;
+            cin >> wybor;
+
+            if (wybor == '1')
+            {
+                Uzytkownik nowyUzytkownik;
+                uzytkownicy.push_back (nowyUzytkownik);
+                iloscUzytkownikow = rejestracja (uzytkownicy,iloscUzytkownikow);
+            }
+            else if (wybor == '2')
+            {
+                idZalogowanegoUzytkownika = logowanie(uzytkownicy, iloscUzytkownikow);
+            }
+            else if (wybor == '9')
+            {
+                exit(0);
+            }
+        }
+        else
+        {
+            return;
+        }
+    }
+}
+
 int wczytajIloscKontaktowZPliku(vector <Kontakt> &kontakty, Kontakt nowaOsoba)
 {
     string linia;
@@ -467,6 +648,12 @@ void usunKontakt(vector <Kontakt> &kontakty,int &iloscKontaktow)
 
 int main()
 {
+    vector <Uzytkownik> uzytkownicy;
+    int idZalogowanegoUzytkownika = 0;
+    int iloscUzytkownikow = wczytajIloscUzytkownikowZPliku(uzytkownicy);
+
+    logowanieIRejestracja(uzytkownicy,idZalogowanegoUzytkownika,iloscUzytkownikow);
+
     vector <Kontakt> kontakty;
     Kontakt nowaOsoba;
     int idWyswietlonegoKontaktu = 0;
@@ -479,6 +666,9 @@ int main()
 
         char wybor;
 
+
+
+
     while(1)
     {
         system("cls");
@@ -487,7 +677,8 @@ int main()
         cout << "3. Wyswietl wszyskie moje kontakty" << endl;
         cout << "4. Edytuj kontakt" << endl;
         cout << "5. Usun kontakt" << endl;
-        cout << "9. Zakoncz program" << endl <<endl;
+        cout << "6. Zmiana hasla" << endl;
+        cout << "9. Wylogowanie" << endl <<endl;
         cout << "Twoj wybor: ";
         cin >> wybor;
 
@@ -515,9 +706,14 @@ int main()
             usunKontakt(kontakty,iloscKontaktow);
             zapiszZmianyDoPliku(kontakty,iloscKontaktow);
         }
+        else if (wybor == '6')
+        {
+            zmianaHasla(uzytkownicy,iloscUzytkownikow, idZalogowanegoUzytkownika);
+        }
         else if (wybor == '9')
         {
-            exit(0);
+            idZalogowanegoUzytkownika=0;
+            logowanieIRejestracja(uzytkownicy,idZalogowanegoUzytkownika,iloscUzytkownikow);
         }
     }
     return 0;
